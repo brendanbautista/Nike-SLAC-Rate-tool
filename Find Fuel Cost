@@ -1,0 +1,23 @@
+Function find_fuel_cost(ByVal cost As Double) As Double
+ 
+ 
+last_row = shSLAC.Range("A" & Rows.Count).End(xlUp).Row
+found_cost = 0#
+found = False
+ 
+For a = 2 To last_row
+    min_cost = shSLAC.Range("A" & a)
+    max_cost = shSLAC.Range("C" & a)
+    If (cost <= max_cost) And (cost >= min_cost) Then
+        found = True
+        found_cost = shSLAC.Range("E" & a).Value
+        find_fuel_cost = found_cost
+        Exit Function
+    End If
+Next a
+ 
+If found = False Then
+    find_fuel_cost = found_cost
+End If
+ 
+End Function
