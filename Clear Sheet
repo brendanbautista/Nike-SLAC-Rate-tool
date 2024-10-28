@@ -1,0 +1,5 @@
+Sub clearSheet()
+
+Range("A6:M1000").ClearContents
+
+End Sub
