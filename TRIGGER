@@ -1,0 +1,12 @@
+Private Sub Worksheet_Change(ByVal Target As Range)
+
+If Target.Address(False, False) = "B1" Then
+
+    shMain.Range("B2") = find_fuel_cost(shMain.Range("B1"))
+
+
+End If
+
+
+
+End Sub
