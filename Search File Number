@@ -1,0 +1,60 @@
+Sub SearchFileNumber()
+
+    ' Declare variables
+    Dim LRM As Long
+    Dim fileNum As String
+    Dim originOnhand As String
+    Dim storeNum As String
+    Dim lbs As Double
+    Dim aptDate As Date
+    Dim aptTime As Date
+    Dim i As Long
+    Dim outputRow As Long
+    Dim found As Boolean
+    Dim freightCost As Double
+
+    ' Get the file number from cell B1 in the Search sheet
+    fileNum = Sheets("Search").Range("B1").Value
+
+    ' Set outputRow to start at row 2 for output
+    outputRow = 2
+
+    ' Find the last row in the Main sheet directly
+    LRM = Sheets("Main").Cells(Sheets("Main").Rows.Count, 1).End(xlUp).Row
+
+    ' Initialize found as False
+    found = False
+
+    ' Loop through the Main sheet to find the matching file number
+    For i = 2 To LRM
+        If Sheets("Main").Cells(i, 3).Value = fileNum Then ' SLC File - J#
+            ' If the file is found, populate the values
+            found = True
+
+            ' Get values from the Main sheet
+            originOnhand = Sheets("Main").Cells(i, 1).Value ' Origin Onhand column in Main
+            storeNum = Sheets("Main").Cells(i, 4).Value ' Store Number column in Main
+            lbs = Sheets("Main").Cells(i, 5).Value ' LBS column in Main
+            aptDate = Sheets("Main").Cells(i, 9).Value ' APT Date column in Main
+            aptTime = Sheets("Main").Cells(i, 10).Value ' APT Time column in Main
+            freightCost = Sheets("Main").Cells(i, 10).Value ' Cost column in Main
+
+            ' Populate values in the Search sheet
+            Sheets("Search").Cells(outputRow, 2).Value = originOnhand ' Origin Onhand
+            Sheets("Search").Cells(outputRow + 1, 2).Value = storeNum ' Store Number
+            Sheets("Search").Cells(outputRow + 2, 2).Value = lbs ' LBS
+            Sheets("Search").Cells(outputRow + 3, 2).Value = aptDate ' APT Date
+            Sheets("Search").Cells(outputRow + 4, 2).Value = aptTime ' APT Time
+            Sheets("Search").Cells(outputRow + 5, 2).Value = freightCost 'Cost
+
+            ' Exit after finding the first match
+            Exit For
+        End If
+    Next i
+
+    ' If no match is found, notify the user
+    If found = False Then
+        MsgBox "File Number not found.", vbExclamation
+    End If
+
+End Sub
