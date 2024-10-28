@@ -1,0 +1,146 @@
+Sub Nike_test()
+
+'Declaring variables
+Dim LRM As Long
+Dim LRR As Long
+Dim originOnhand As String
+Dim storeNum As String
+Dim lookup_wgt As Double
+Dim tempCost As Double
+Dim tempMax As Double
+Dim tempMin As Double
+Dim freightCost As Double
+Dim found As Boolean
+Dim aptDate As Date
+Dim aptTime As Date
+Dim fuelRate As Double
+Dim fuelCharge As Double
+Dim totalCost As Double
+Dim i As Long, j As Long
+Dim wgtBrk As Integer
+
+' Fetch the fuel rate from 'Rates' worksheet (cell A:10)
+fuelRate = shMain.Range("B2")
+
+' Find last row in both sheets
+LRM = shMain.Cells(Rows.Count, 1).End(xlUp).Row 'Last row main
+LRR = shRates.Cells(Rows.Count, 1).End(xlUp).Row 'Last row rates
+
+If LRM <= 5 Then
+    MsgBox "No data entered.  Please enter and run again."
+    Exit Sub
+End If
+
+For i = 6 To LRM
+    originOnhand = shMain.Cells(i, 1) 'Origin Onhand column in main
+    storeNum = shMain.Cells(i, 4) 'Store Number column in main
+    lookup_wgt = shMain.Cells(i, 5) 'LBS column in main
+    aptDate = shMain.Cells(i, 8) 'APT Date column in main
+    aptTime = shMain.Cells(i, 9) 'APT Time column in main
+    
+    'Initialize values
+        tempCost = 0
+        tempMax = 0
+        tempMin = 0
+        freightCost = 0
+        fuelCharge = 0
+        totalCost = 0
+        Comment = ""
+        found = False
+        
+      ' Check if it's a weekend or after 6 PM
+    If Weekday(aptDate, vbMonday) >= 6 Then
+            ' Weekend (Saturday or Sunday)
+            freightCost = 310
+            fuelCharge = 0 'flat rate, no fuel
+            Comment = "Weekend rate applied."
+            shMain.Cells(i, 10).Value = freightCost
+        ElseIf Hour(aptTime) >= 18 Then
+            ' PM delivery (after 6 PM)
+            freightCost = 250
+            fuelCharge = 0 'flat rate, no fuel
+            Comment = "PM rate was applied."
+            shMain.Cells(i, 10).Value = freightCost
+        Else
+        
+    'Standard Rates Calculation:
+    For j = 2 To LRR
+        tempStore = shRates.Cells(j, 2).Value
+        
+        If tempStore = storeNum Then
+        found = True
+        zone = shRates.Cells(j, 5).Value ' Get the zone from Rates sheet
+        
+        'Rates Calculation
+        
+    'Weight break logic
+         If lookup_wgt >= 5000 Then wgtBrk = 13
+         If lookup_wgt >= 4000 And lookup_wgt < 5000 Then wgtBrk = 12
+        If lookup_wgt >= 3000 And lookup_wgt < 4000 Then wgtBrk = 11
+         If lookup_wgt >= 2000 And lookup_wgt < 3000 Then wgtBrk = 10
+         If lookup_wgt >= 1000 And lookup_wgt < 2000 Then wgtBrk = 9
+        If lookup_wgt >= 500 And lookup_wgt < 1000 Then wgtBrk = 8
+        If lookup_wgt >= 100 And lookup_wgt < 500 Then wgtBrk = 7
+        
+    'Setting variables for Max/Min & Final Cost
+        tempCost = lookup_wgt * shRates.Cells(j, wgtBrk)
+        tempMax = shRates.Cells(j, 14).Value
+        tempMin = shRates.Cells(j, 6).Value
+
+     'Determines whether or not Max/Min value or rate calculation is used based on tempCost
+        If tempCost >= tempMax Then
+            freightCost = tempMax
+            Comment = "Max rate applied. Zone: " & zone
+        ElseIf tempCost <= tempMin Then
+            freightCost = tempMin
+            Comment = "Min rate applied. Zone: " & zone
+        Else
+            freightCost = tempCost
+            Comment = "Zone: " & zone 'Default comment for when no max/min or weekend/pm rate is used
+        End If
+        
+    'Populates freightCost values into 'Cost' column in Main
+        shMain.Cells(i, 10).Value = freightCost
+        Exit For
+       End If
+    Next j
+End If
+        
+    ' If no matching store is found
+      '  If found = False Then
+       '  shMain.Cells(i, 13).Value = "Store Not Found"
+        ' Else
+        'End If
+     
+     
+        ' Calculate the fuel charge and total cost
+        ' fuelCharge = Round(fuelRate * freightCost, 2)
+        If freightCost = 310 Or freightCost = 250 Then 'In the case of a flat rate
+            fuelCharge = 0
+        Else
+            'Fuel charge calculation for non-flate rates
+            fuelCharge = Round(fuelRate * freightCost, 2)
+        End If
+        
+        totalCost = Round(freightCost + fuelCharge, 2)
+        
+        ' Populate fuel charge/total cost in Main (columns K & L)
+        shMain.Cells(i, 11).Value = fuelCharge
+        shMain.Cells(i, 12).Value = totalCost
+        
+        ' Populate the Comments section in Main (Column 13)
+        shMain.Cells(i, 13).Value = Comment
+    'Look up Store Number in the "Rates" sheet based on Origin Onhand
+        'storeNumber = Application.VLookup(originOnhand, shRates.Range("A:C"), 3, False)
+        
+    'If found, display the Store Number
+        'If Not IsError(storeNumber) Then
+            'shMain.Cells(i,4).Value = storeNumber
+        'Else
+            'shMain.Cells(i,4).Value = "Not Found"
+            
+        'End If
+        
+    Next i
+        
+End Sub
